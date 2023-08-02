@@ -1,11 +1,40 @@
+import { HYDRATE, createWrapper } from "next-redux-wrapper";
 import { applyMiddleware, createStore } from "redux";
-import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
 import rootReducer from "./rootReducer";
 
-const store = createStore(
-   rootReducer,
-   composeWithDevTools(applyMiddleware(thunk)),
-);
+const masterReducer = (state, action) => {
+   if (action.type === HYDRATE) {
+      const nextState = {
+         ...state, // use previous state
+         counter: {
+            count: state.counter.count + action.payload.counter.count,
+         },
+         users: {
+            users: [
+               ...new Set([
+                  ...state.users.users,
+                  ...action.payload.users.users,
+               ]),
+            ],
+         },
+      };
 
-export default store;
+      return nextState;
+   } else {
+      return rootReducer(state, action);
+   }
+};
+
+const bindMiddleware = (middleware) => {
+   if (process.env.NODE_ENV !== "production") {
+      const { composeWithDevTools } = require("redux-devtools-extension");
+      return composeWithDevTools(applyMiddleware(...middleware));
+   }
+
+   return applyMiddleware(...middleware);
+};
+
+const initStore = () => createStore(masterReducer, bindMiddleware([thunk]));
+
+export const wrapper = createWrapper(initStore);

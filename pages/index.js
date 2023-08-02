@@ -1,4 +1,6 @@
-import Page from "../components/Page";
+import Page from "@/components/Page";
+import { incrementCounter } from "@/redux/counter/actions";
+import { wrapper } from "@/redux/store";
 
 const Index = (props) => {
    return (
@@ -10,3 +12,7 @@ const Index = (props) => {
 };
 
 export default Index;
+
+export const getStaticProps = wrapper.getStaticProps((store) => () => {
+   store.dispatch(incrementCounter());
+});
